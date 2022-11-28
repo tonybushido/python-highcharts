@@ -1,3 +1,6 @@
+# Forked
+A fork to evaluate work needed to implement Highchats windbarb plots which are mysteriously missing from the Python wrapper implementation :(
+
 # python-highcharts [![CircleCI](https://circleci.com/gh/kyper-data/python-highcharts.svg?style=svg)](https://circleci.com/gh/kyper-data/python-highcharts)
 
 ## License
