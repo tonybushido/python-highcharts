@@ -1,11 +1,14 @@
 # -*- coding: UTF-8 -*-
+import datetime
+import json
+
 from past.builtins import basestring
 
-import json, datetime
-from .common import Formatter, Events, Position, ContextButton, Options3d, ResetZoomButton, DrillUpButton, \
-    Labels, Marker, Point, PlotBands, States, Tooltip, Title, Zones, Levels, \
-    JSfunction, ColorObject, CSSObject, SVGObject, \
-    CommonObject, ArrayObject
+from .common import (ArrayObject, ColorObject, CommonObject, ContextButton,
+                     CSSObject, DrillUpButton, Events, Formatter, JSfunction,
+                     Labels, Levels, Marker, Options3d, PlotBands, Point,
+                     Position, ResetZoomButton, States, SVGObject, Title,
+                     Tooltip, Zones)
 
 PLOT_OPTION_ALLOWED_ARGS = {
   "common": {
@@ -91,7 +94,7 @@ PLOT_OPTION_ALLOWED_ARGS = {
     "dashStyle": basestring,
     "fillColor": (ColorObject, basestring, dict),
     "fillOpacity": float,
-    "getExtremesFromAll": bool,  
+    "getExtremesFromAll": bool,
     "keys": list,
     "legendIndex": [int, float],
     "lineColor": (ColorObject, basestring, dict),
@@ -125,7 +128,7 @@ PLOT_OPTION_ALLOWED_ARGS = {
     "pointStart": [int,basestring,datetime.datetime],
     "shadow": [bool, dict],
     "turboThreshold": int,
-    "trackByArea": bool,  
+    "trackByArea": bool,
   },
   "bar": {
     "allowPointSelect": bool,
@@ -321,7 +324,7 @@ PLOT_OPTION_ALLOWED_ARGS = {
     "dial": NotImplemented,
     "linkedTo": basestring,
     "negativeColor": (ColorObject, basestring, dict),
-    "overshoot": [int, float],  
+    "overshoot": [int, float],
     "pivot": NotImplemented,
     "stickyTracking": bool,
     "threshold": [int, type(None)],
@@ -460,6 +463,32 @@ PLOT_OPTION_ALLOWED_ARGS = {
     "stickyTracking": bool,
     "turboThreshold": int,
   },
+    "windbarb": {
+    "allowPointSelect": bool,
+    "connectEnds": bool,
+    "connectNulls": bool,
+    "cropThreshold": int,
+    "dashStyle": basestring,
+    "fillColor": (ColorObject, basestring, dict),
+    "fillOpacity": float,
+    "getExtremesFromAll": bool,
+    "keys": list,
+    "legendIndex": [int, float],
+    "lineColor": (ColorObject, basestring, dict),
+    "lineWidth": int,
+    "linkedTo": basestring,
+    "marker": (Marker, dict),
+    "pointInterval": int,
+    "pointIntervalUnit": basestring,
+    "pointPlacement": [basestring, int, float],
+    "pointStart": (int,basestring, datetime.datetime),
+    "shadow": [bool, dict], #shadow object
+    "stacking": basestring,
+    "step": bool,
+    "threshold": [int, type(None)],
+    "trackByArea": bool,
+    "turboThreshold": int,
+  },
 }
 
 DATA_SERIES_ALLOWED_OPTIONS = {
@@ -536,17 +565,17 @@ class SeriesOptions(object):
                             else:
                                 self.__options__()[k].__options__().update(v)
                         else:
-                            self.__options__().update({k:allowed_args[k][0](**v)}) 
+                            self.__options__().update({k:allowed_args[k][0](**v)})
 
                     elif isinstance(allowed_args[k], tuple) and isinstance(allowed_args[k][0](), ArrayObject):
-                        # update array 
+                        # update array
                         if isinstance(v, dict):
                             self.__dict__[k].append(allowed_args[k][0](**v))
                         elif isinstance(v, list):
                             for item in v:
                                 self.__dict__[k].append(allowed_args[k][0](**item))
                         else:
-                            OptionTypeError("Not An Accepted Input Type: %s" % type(v))        
+                            OptionTypeError("Not An Accepted Input Type: %s" % type(v))
 
                     elif isinstance(allowed_args[k], tuple) and \
                         (isinstance(allowed_args[k][0](), CSSObject) or isinstance(allowed_args[k][0](), SVGObject)):
@@ -555,7 +584,7 @@ class SeriesOptions(object):
                                 self.__dict__[k].__options__().update({key:value})
                         else:
                             self.__dict__.update({k:allowed_args[k][0](**v)})
-                        
+
                         v = self.__dict__[k].__options__()
                         # upating object
                         if isinstance(v, dict):
@@ -571,10 +600,10 @@ class SeriesOptions(object):
                             self.__dict__.update({k:allowed_args[k][0](v)})
                     else:
                         self.__dict__.update({k:v})
-            else: 
+            else:
                 print(k,v)
                 if not supress_errors: raise OptionTypeError("Option Type Mismatch: Expected: %s" % allowed_args[k])
-                
+
 
     def process_kwargs(self,kwargs,series_type,supress_errors=False):
         allowed_args = PLOT_OPTION_ALLOWED_ARGS[series_type]
@@ -592,7 +621,7 @@ class SeriesOptions(object):
                             else:
                                 self.__dict__.update({k:allowed_args[k][0](**v[0])})
                                 for item in v[1:]:
-                                    self.__dict__[k].update(item)                          
+                                    self.__dict__[k].update(item)
                         elif isinstance(v, CommonObject) or isinstance(v, ArrayObject) or \
                             isinstance(v, CSSObject) or isinstance(v, SVGObject) or isinstance(v, ColorObject) or \
                             isinstance(v, JSfunction) or isinstance(v, Formatter) or isinstance(v, datetime.datetime):
@@ -600,11 +629,11 @@ class SeriesOptions(object):
                         else:
                             self.__dict__.update({k:allowed_args[k][0](v)})
                     else:
-                        self.__dict__.update({k:v})          
-                else: 
+                        self.__dict__.update({k:v})
+                else:
                     print(k,v)
                     if not supress_errors: raise OptionTypeError("Option Type Mismatch: Expected: %s" % allowed_args[k])
-           
+
 
     def load_defaults(self,series_type): # not in use
         self.process_kwargs(DEFAULT_OPTIONS.get(series_type,{}),series_type)
@@ -614,15 +643,15 @@ class SeriesOptions(object):
             return None # Attribute Not Set
         else:
             return True
-            
+
 
 class Series(object):
     """Series class for input data """
 
     def __init__(self, data, series_type="line", supress_errors=False, **kwargs):
 
-        # List of dictionaries. Each dict contains data and properties, 
-        # which need to handle before construct the object for series 
+        # List of dictionaries. Each dict contains data and properties,
+        # which need to handle before construct the object for series
         if isinstance(data, list):
             for item in data:
                 if isinstance(item, dict):
@@ -635,18 +664,18 @@ class Series(object):
                                     elif isinstance(v, CommonObject) or isinstance(v, ArrayObject) or \
                                         isinstance(v, CSSObject) or isinstance(v, SVGObject) or isinstance(v, ColorObject) or \
                                         isinstance(v, JSfunction) or isinstance(v, Formatter) or isinstance(v, datetime.datetime):
-                                        item.update({k:v})                           
+                                        item.update({k:v})
                                     else:
                                         item.update({k:DATA_SERIES_ALLOWED_OPTIONS[k][0](v)})
                                 else:
                                     item.update({k:v})
-                        
+
         self.__dict__.update({
           "data": data,
           "type": series_type,
           })
 
-        # Series propertie can be input as kwargs, which is handled here 
+        # Series propertie can be input as kwargs, which is handled here
         for k, v in kwargs.items():
             if k in DATA_SERIES_ALLOWED_OPTIONS:
                 if SeriesOptions.__validate_options__(k,v,DATA_SERIES_ALLOWED_OPTIONS[k]):
@@ -656,14 +685,14 @@ class Series(object):
                         elif isinstance(v, CommonObject) or isinstance(v, ArrayObject) or \
                             isinstance(v, CSSObject) or isinstance(v, SVGObject) or isinstance(v, ColorObject) or \
                             isinstance(v, JSfunction) or isinstance(v, Formatter) or isinstance(v, datetime.datetime):
-                            self.__dict__.update({k:v})                           
+                            self.__dict__.update({k:v})
                         else:
                             self.__dict__.update({k:DATA_SERIES_ALLOWED_OPTIONS[k][0](v)})
                     else:
                         self.__dict__.update({k:v})
-                else: 
+                else:
                     if not supress_errors: raise OptionTypeError("Option Type Mismatch: Expected: %s" % DATA_SERIES_ALLOWED_OPTIONS[k])
-            
+
 
     def __options__(self):
         return self.__dict__
